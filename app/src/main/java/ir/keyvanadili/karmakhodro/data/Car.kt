@@ -3,6 +3,13 @@ package ir.keyvanadili.karmakhodro.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+enum class VehicleType {
+    CAR,        // خودرو سواری
+    MOTORCYCLE, // موتورسیکلت
+    TRUCK,      // وانت / کامیون
+    VAN         // ون / مینی‌بوس
+}
+
 @Entity(tableName = "cars")
 data class Car(
     @PrimaryKey(autoGenerate = true)
@@ -13,5 +20,6 @@ data class Car(
     val year: Int? = null,     // سال ساخت
     val color: String = "",
     val currentMileage: Int = 0,
-    val notes: String = ""
+    val notes: String = "",
+    val vehicleType: String = VehicleType.CAR.name
 )

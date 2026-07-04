@@ -1,13 +1,16 @@
 package ir.keyvanadili.karmakhodro.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ir.keyvanadili.karmakhodro.data.Car
 import ir.keyvanadili.karmakhodro.data.Repository
 import ir.keyvanadili.karmakhodro.data.ServiceRecord
+import ir.keyvanadili.karmakhodro.notification.NotificationHelper
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -33,15 +36,19 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
         viewModelScope.launch { repository.deleteCar(car) }
     }
 
-    fun addRecord(record: ServiceRecord, onDone: () -> Unit = {}) {
+    fun addRecord(context: Context, car: Car, record: ServiceRecord, onDone: () -> Unit = {}) {
         viewModelScope.launch {
             repository.addRecord(record)
+            checkReminderForRecord(context, car, record, car.currentMileage)
             onDone()
         }
     }
 
-    fun updateRecord(record: ServiceRecord) {
-        viewModelScope.launch { repository.updateRecord(record) }
+    fun updateRecord(context: Context, car: Car, record: ServiceRecord) {
+        viewModelScope.launch {
+            repository.updateRecord(record)
+            checkReminderForRecord(context, car, record, car.currentMileage)
+        }
     }
 
     fun deleteRecord(record: ServiceRecord) {
@@ -49,6 +56,42 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
     }
 
     suspend fun getCarById(id: Long): Car? = repository.getCarById(id)
+
+    /**
+     * ثبت کیلومتر فعلی جدید برای یک خودرو و بررسی اینکه آیا به سررسید
+     * کیلومتر سرویسِ ثبت‌شده در یکی از رویدادها رسیده یا خیر؛ در صورت رسیدن، نوتیف ارسال می‌شود.
+     */
+    fun updateCarMileage(context: Context, car: Car, newMileage: Int, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            val updated = car.copy(currentMileage = newMileage)
+            repository.updateCar(updated)
+
+            val records = repository.getRecordsForCar(car.id).first()
+            records.forEach { record ->
+                checkReminderForRecord(context, updated, record, newMileage)
+            }
+            onDone()
+        }
+    }
+
+    private suspend fun checkReminderForRecord(
+        context: Context,
+        car: Car,
+        record: ServiceRecord,
+        currentMileage: Int
+    ) {
+        val due = record.nextServiceMileage
+        if (due != null && !record.nextServiceNotified && currentMileage >= due) {
+            NotificationHelper.showServiceDueNotification(
+                context = context,
+                notificationId = record.id.toInt(),
+                carName = car.name,
+                currentMileage = currentMileage,
+                dueMileage = due
+            )
+            repository.updateRecord(record.copy(nextServiceNotified = true))
+        }
+    }
 
     class Factory(private val repository: Repository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")

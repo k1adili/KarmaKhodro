@@ -4,12 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import ir.keyvanadili.karmakhodro.data.Car
 import ir.keyvanadili.karmakhodro.data.Repository
 import ir.keyvanadili.karmakhodro.data.ServiceRecord
 import ir.keyvanadili.karmakhodro.ui.screens.CarDetailScreen
@@ -38,6 +40,7 @@ private object Routes {
 fun KarmaKhodroNavGraph(repository: Repository) {
     val navController = rememberNavController()
     val viewModel: MainViewModel = viewModel(factory = MainViewModel.Factory(repository))
+    val context = LocalContext.current
 
     NavHost(navController = navController, startDestination = Routes.CAR_LIST) {
 
@@ -68,7 +71,7 @@ fun KarmaKhodroNavGraph(repository: Repository) {
             arguments = listOf(navArgument("carId") { type = NavType.LongType })
         ) { backStackEntry ->
             val carId = backStackEntry.arguments?.getLong("carId") ?: 0L
-            val carState = produceState<ir.keyvanadili.karmakhodro.data.Car?>(initialValue = null, carId) {
+            val carState = produceState<Car?>(initialValue = null, carId) {
                 value = viewModel.getCarById(carId)
             }
             val car = carState.value
@@ -93,7 +96,7 @@ fun KarmaKhodroNavGraph(repository: Repository) {
             arguments = listOf(navArgument("carId") { type = NavType.LongType })
         ) { backStackEntry ->
             val carId = backStackEntry.arguments?.getLong("carId") ?: 0L
-            val carState = produceState<ir.keyvanadili.karmakhodro.data.Car?>(initialValue = null, carId) {
+            val carState = produceState<Car?>(initialValue = null, carId) {
                 value = viewModel.getCarById(carId)
             }
             val car = carState.value
@@ -106,7 +109,10 @@ fun KarmaKhodroNavGraph(repository: Repository) {
                     onBack = { navController.popBackStack() },
                     onEditCar = { navController.navigate(Routes.carEdit(carId)) },
                     onAddRecord = { navController.navigate(Routes.recordAdd(carId)) },
-                    onRecordClick = { record -> navController.navigate(Routes.recordEdit(carId, record.id)) }
+                    onRecordClick = { record -> navController.navigate(Routes.recordEdit(carId, record.id)) },
+                    onUpdateMileage = { newMileage ->
+                        viewModel.updateCarMileage(context, car, newMileage)
+                    }
                 )
             }
         }
@@ -116,16 +122,22 @@ fun KarmaKhodroNavGraph(repository: Repository) {
             arguments = listOf(navArgument("carId") { type = NavType.LongType })
         ) { backStackEntry ->
             val carId = backStackEntry.arguments?.getLong("carId") ?: 0L
-            ServiceFormScreen(
-                carId = carId,
-                existingRecord = null,
-                onBack = { navController.popBackStack() },
-                onSave = { record ->
-                    viewModel.addRecord(record) {
-                        navController.popBackStack()
+            val carState = produceState<Car?>(initialValue = null, carId) {
+                value = viewModel.getCarById(carId)
+            }
+            val car = carState.value
+            if (car != null) {
+                ServiceFormScreen(
+                    carId = carId,
+                    existingRecord = null,
+                    onBack = { navController.popBackStack() },
+                    onSave = { record ->
+                        viewModel.addRecord(context, car, record) {
+                            navController.popBackStack()
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         composable(
@@ -137,16 +149,20 @@ fun KarmaKhodroNavGraph(repository: Repository) {
         ) { backStackEntry ->
             val carId = backStackEntry.arguments?.getLong("carId") ?: 0L
             val recordId = backStackEntry.arguments?.getLong("recordId") ?: 0L
+            val carState = produceState<Car?>(initialValue = null, carId) {
+                value = viewModel.getCarById(carId)
+            }
+            val car = carState.value
             val records by viewModel.recordsForCar(carId).collectAsState(initial = emptyList())
             val record: ServiceRecord? = records.find { it.id == recordId }
 
-            if (record != null) {
+            if (record != null && car != null) {
                 ServiceFormScreen(
                     carId = carId,
                     existingRecord = record,
                     onBack = { navController.popBackStack() },
                     onSave = { updated ->
-                        viewModel.updateRecord(updated)
+                        viewModel.updateRecord(context, car, updated)
                         navController.popBackStack()
                     },
                     onDelete = { toDelete ->

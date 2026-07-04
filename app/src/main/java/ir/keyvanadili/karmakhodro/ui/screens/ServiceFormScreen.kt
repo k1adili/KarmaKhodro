@@ -2,16 +2,21 @@ package ir.keyvanadili.karmakhodro.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import ir.keyvanadili.karmakhodro.data.ServiceRecord
+import ir.keyvanadili.karmakhodro.ui.components.PersianDatePickerDialog
 import ir.keyvanadili.karmakhodro.util.DateUtils
+import ir.keyvanadili.karmakhodro.util.PersianDateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +34,18 @@ fun ServiceFormScreen(
     var garageName by remember { mutableStateOf(existingRecord?.garageName ?: "") }
     var dateMillis by remember { mutableStateOf(existingRecord?.dateMillis ?: DateUtils.nowMillis()) }
     var nextMileage by remember { mutableStateOf(existingRecord?.nextServiceMileage?.toString() ?: "") }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    if (showDatePicker) {
+        PersianDatePickerDialog(
+            initialMillis = dateMillis,
+            onDismiss = { showDatePicker = false },
+            onConfirm = { newMillis ->
+                dateMillis = newMillis
+                showDatePicker = false
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -38,15 +55,22 @@ fun ServiceFormScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.Filled.ArrowForward, contentDescription = "بازگشت")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSecondary
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -57,20 +81,40 @@ fun ServiceFormScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text("تاریخ: ${DateUtils.formatMillis(dateMillis)}")
+            OutlinedCard(
+                onClick = { showDatePicker = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("تاریخ سرویس (شمسی)", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            PersianDateUtils.formatMillis(dateMillis),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    Icon(Icons.Filled.CalendarMonth, contentDescription = "انتخاب تاریخ")
+                }
+            }
 
             OutlinedTextField(
                 value = mileage,
                 onValueChange = { mileage = it.filter { c -> c.isDigit() } },
                 label = { Text("کیلومتر در زمان سرویس") },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = cost,
                 onValueChange = { cost = it.filter { c -> c.isDigit() } },
                 label = { Text("هزینه (تومان)") },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
@@ -90,7 +134,8 @@ fun ServiceFormScreen(
                 value = nextMileage,
                 onValueChange = { nextMileage = it.filter { c -> c.isDigit() } },
                 label = { Text("یادآوری سرویس بعدی در چه کیلومتری (اختیاری)") },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+                supportingText = { Text("وقتی کیلومتر فعلی خودرو به این عدد برسد، نوتیف یادآوری ارسال می‌شود") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -108,7 +153,10 @@ fun ServiceFormScreen(
                         cost = cost.toLongOrNull() ?: 0,
                         garageName = garageName,
                         nextServiceMileage = nextMileage.toIntOrNull(),
-                        nextServiceDateMillis = existingRecord?.nextServiceDateMillis
+                        nextServiceDateMillis = existingRecord?.nextServiceDateMillis,
+                        nextServiceNotified = if (existingRecord != null &&
+                            existingRecord.nextServiceMileage == nextMileage.toIntOrNull()
+                        ) existingRecord.nextServiceNotified else false
                     )
                     onSave(record)
                 },
@@ -126,6 +174,8 @@ fun ServiceFormScreen(
                     Text("حذف این رویداد")
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
