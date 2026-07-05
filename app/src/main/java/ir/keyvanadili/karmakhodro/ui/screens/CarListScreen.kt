@@ -68,7 +68,7 @@ fun CarListScreen(
                     .padding(top     = 14.dp)
             )
             Text(
-                "+98 912 777 89 48",
+                "0912-7778948",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
