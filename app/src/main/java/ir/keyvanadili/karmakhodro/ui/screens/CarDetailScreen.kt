@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
@@ -119,10 +120,19 @@ fun CarDetailScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        FilledTonalButton(onClick = { showMileageDialog = true }) {
-                            Icon(Icons.Filled.Speed, contentDescription = null)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("ثبت کیلومتر جدید")
+                        FilledTonalButton(
+                            onClick = { showMileageDialog = true },
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.Speed,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("ثبت کیلومتر", style = MaterialTheme.typography.labelMedium)
                         }
                     }
 
