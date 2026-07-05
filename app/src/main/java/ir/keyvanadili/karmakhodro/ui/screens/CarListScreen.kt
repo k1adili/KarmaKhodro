@@ -65,7 +65,16 @@ fun CarListScreen(
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 14.dp)
+                    .padding(top     = 14.dp)
+            )
+            Text(
+                "+98 912 777 89 48",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
             )
 
             if (cars.isEmpty()) {
