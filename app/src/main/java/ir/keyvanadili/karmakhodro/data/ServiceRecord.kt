@@ -28,5 +28,6 @@ data class ServiceRecord(
     val cost: Long = 0,            // هزینه به تومان
     val garageName: String = "",   // نام تعمیرگاه
     val nextServiceMileage: Int? = null, // یادآوری کیلومتر بعدی
-    val nextServiceDateMillis: Long? = null // یادآوری تاریخ بعدی
+    val nextServiceDateMillis: Long? = null, // یادآوری تاریخ بعدی
+    val nextServiceNotified: Boolean = false // آیا نوتیف سررسید این رویداد قبلا ارسال شده
 )
