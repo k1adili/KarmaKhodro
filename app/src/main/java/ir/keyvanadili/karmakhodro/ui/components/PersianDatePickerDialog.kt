@@ -1,8 +1,11 @@
 package ir.keyvanadili.karmakhodro.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -10,8 +13,11 @@ import ir.keyvanadili.karmakhodro.util.PersianDateUtils
 
 /**
  * دیالوگ انتخاب تاریخ شمسی با سه منوی کشویی (روز، ماه، سال) — بدون نیاز به تایپ.
- * روزهای قابل انتخاب به‌صورت خودکار بر اساس ماه/سال انتخاب‌شده تنظیم می‌شوند
- * (مثلا اسفند بسته به کبیسه بودن سال، ۲۹ یا ۳۰ روز نشان داده می‌شود).
+ *
+ * توجه: عمداً از OutlinedTextField/ExposedDropdownMenuBox استفاده نشده، چون در برخی
+ * ترکیب‌های عرض محدود + RTL باعث شکستن عمودی متن می‌شد. به‌جایش از یک دکمه ساده
+ * (OutlinedButton) با متن تک‌خطی اجباری (maxLines = 1) و یک DropdownMenu استفاده شده
+ * که این مشکل را کاملاً برطرف می‌کند.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,14 +61,14 @@ fun PersianDatePickerDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     SimpleDropdown(
-                        modifier = Modifier.weight(0.7f),
+                        modifier = Modifier.weight(0.8f),
                         label = "روز",
                         selectedText = PersianDateUtils.toPersianDigits(selectedDay),
                         options = (1..maxDayInSelectedMonth).map { it.toString() to PersianDateUtils.toPersianDigits(it) },
                         onOptionSelected = { selectedDay = it.toInt() }
                     )
                     SimpleDropdown(
-                        modifier = Modifier.weight(1.5f),
+                        modifier = Modifier.weight(1.4f),
                         label = "ماه",
                         selectedText = PersianDateUtils.monthName(selectedMonth),
                         options = PersianDateUtils.monthNames().mapIndexed { index, name -> (index + 1).toString() to name },
@@ -95,10 +101,10 @@ fun PersianDatePickerDialog(
 }
 
 /**
- * یک منوی کشویی ساده و فقط‌خواندنی (بدون امکان تایپ) برای انتخاب از میان گزینه‌ها.
+ * یک منوی کشویی ساده برای انتخاب از میان گزینه‌ها — بدون TextField، فقط یک دکمه
+ * با متن اجباراً تک‌خط (maxLines = 1) به‌علاوه یک DropdownMenu.
  * options: لیستی از (مقدار خام, متن نمایشی)
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SimpleDropdown(
     modifier: Modifier = Modifier,
@@ -109,41 +115,62 @@ private fun SimpleDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = modifier
-    ) {
-        OutlinedTextField(
-            value = selectedText,
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium,
-            label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth()
+    Column(modifier = modifier) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { (value, display) ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            display,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    onClick = {
-                        onOptionSelected(value)
-                        expanded = false
-                    }
-                )
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Box {
+            OutlinedButton(
+                onClick = { expanded = true },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        selectedText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { (value, display) ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                display,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
+                        onClick = {
+                            onOptionSelected(value)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }
