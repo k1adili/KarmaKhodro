@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ir.keyvanadili.karmakhodro.util.PersianDateUtils
 
@@ -47,18 +48,21 @@ fun PersianDatePickerDialog(
                     "${PersianDateUtils.toPersianDigits(selectedDay)} ${PersianDateUtils.monthName(selectedMonth)} ${PersianDateUtils.toPersianDigits(selectedYear)}",
                     style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     SimpleDropdown(
-                        modifier = Modifier.weight(0.8f),
+                        modifier = Modifier.weight(0.7f),
                         label = "روز",
                         selectedText = PersianDateUtils.toPersianDigits(selectedDay),
                         options = (1..maxDayInSelectedMonth).map { it.toString() to PersianDateUtils.toPersianDigits(it) },
                         onOptionSelected = { selectedDay = it.toInt() }
                     )
                     SimpleDropdown(
-                        modifier = Modifier.weight(1.3f),
+                        modifier = Modifier.weight(1.5f),
                         label = "ماه",
                         selectedText = PersianDateUtils.monthName(selectedMonth),
                         options = PersianDateUtils.monthNames().mapIndexed { index, name -> (index + 1).toString() to name },
@@ -114,7 +118,9 @@ private fun SimpleDropdown(
             value = selectedText,
             onValueChange = {},
             readOnly = true,
-            label = { Text(label) },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium,
+            label = { Text(label, style = MaterialTheme.typography.labelSmall) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .menuAnchor()
@@ -126,7 +132,13 @@ private fun SimpleDropdown(
         ) {
             options.forEach { (value, display) ->
                 DropdownMenuItem(
-                    text = { Text(display) },
+                    text = {
+                        Text(
+                            display,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     onClick = {
                         onOptionSelected(value)
                         expanded = false
