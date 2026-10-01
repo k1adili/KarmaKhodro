@@ -7,17 +7,21 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import ir.keyvanadili.karmakhodro.data.Car
 import ir.keyvanadili.karmakhodro.data.VehicleType
+import ir.keyvanadili.karmakhodro.ui.components.FormSection
+import ir.keyvanadili.karmakhodro.ui.theme.KarmaSpacing
 import ir.keyvanadili.karmakhodro.ui.theme.vehicleTypeIcon
 import ir.keyvanadili.karmakhodro.ui.theme.vehicleTypeLabel
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarFormScreen(
     existingCar: Car?,
@@ -52,7 +56,7 @@ fun CarFormScreen(
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surfaceVariant
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -60,77 +64,96 @@ fun CarFormScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(KarmaSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(KarmaSpacing.xl)
         ) {
-            Text("نوع وسیله نقلیه", style = MaterialTheme.typography.titleMedium)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                VehicleType.values().forEach { type ->
-                    FilterChip(
-                        selected = vehicleType == type.name,
-                        onClick = { vehicleType = type.name },
-                        label = { Text(vehicleTypeLabel(type.name)) },
-                        leadingIcon = {
-                            Icon(vehicleTypeIcon(type.name), contentDescription = null)
-                        }
-                    )
+            FormSection(title = "نوع وسیله نقلیه") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(KarmaSpacing.sm)
+                ) {
+                    VehicleType.values().forEach { type ->
+                        VehicleTypeOption(
+                            selected = vehicleType == type.name,
+                            typeName = type.name,
+                            label = vehicleTypeLabel(type.name),
+                            onClick = { vehicleType = type.name }
+                        )
+                    }
                 }
             }
 
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("نام دلخواه خودرو (مثلا: پژوی من)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = brandModel,
-                onValueChange = { brandModel = it },
-                label = { Text("برند و مدل") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = plateNumber,
-                onValueChange = { plateNumber = it },
-                label = { Text("شماره پلاک") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = year,
-                    onValueChange = { year = it.filter { c -> c.isDigit() } },
-                    label = { Text("سال ساخت") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = color,
-                    onValueChange = { color = it },
-                    label = { Text("رنگ") },
-                    modifier = Modifier.weight(1f)
-                )
+            FormSection(title = "مشخصات خودرو") {
+                Column(verticalArrangement = Arrangement.spacedBy(KarmaSpacing.md)) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("نام دلخواه خودرو (مثلا: پژوی من)") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = brandModel,
+                        onValueChange = { brandModel = it },
+                        label = { Text("برند و مدل") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = plateNumber,
+                        onValueChange = { plateNumber = it },
+                        label = { Text("شماره پلاک") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(KarmaSpacing.md)) {
+                        OutlinedTextField(
+                            value = year,
+                            onValueChange = { year = it.filter { c -> c.isDigit() } },
+                            label = { Text("سال ساخت") },
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.medium,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = color,
+                            onValueChange = { color = it },
+                            label = { Text("رنگ") },
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
-            OutlinedTextField(
-                value = mileage,
-                onValueChange = { mileage = it.filter { c -> c.isDigit() } },
-                label = { Text("کیلومتر فعلی") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("یادداشت") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 2
-            )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            FormSection(title = "کارکرد و یادداشت") {
+                Column(verticalArrangement = Arrangement.spacedBy(KarmaSpacing.md)) {
+                    OutlinedTextField(
+                        value = mileage,
+                        onValueChange = { mileage = it.filter { c -> c.isDigit() } },
+                        label = { Text("کیلومتر فعلی") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = { Text("یادداشت") },
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2
+                    )
+                }
+            }
 
             Button(
                 onClick = {
@@ -147,22 +170,57 @@ fun CarFormScreen(
                     )
                     onSave(car)
                 },
+                shape = MaterialTheme.shapes.large,
+                contentPadding = PaddingValues(vertical = 14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("ذخیره")
+                Text("ذخیره", style = MaterialTheme.typography.titleSmall, maxLines = 1)
             }
 
             if (existingCar != null && onDelete != null) {
                 OutlinedButton(
                     onClick = { onDelete(existingCar) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    shape = MaterialTheme.shapes.large,
+                    contentPadding = PaddingValues(vertical = 14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("حذف این خودرو")
+                    Icon(Icons.Filled.DeleteOutline, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("حذف این خودرو", maxLines = 1)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(KarmaSpacing.lg))
+        }
+    }
+}
+
+@Composable
+private fun VehicleTypeOption(
+    selected: Boolean,
+    typeName: String,
+    label: String,
+    onClick: () -> Unit
+) {
+    val containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+    val contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        color = containerColor,
+        contentColor = contentColor,
+        border = if (!selected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
+        modifier = Modifier.width(84.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = KarmaSpacing.sm, horizontal = KarmaSpacing.xs),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(vehicleTypeIcon(typeName), contentDescription = null)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
         }
     }
 }

@@ -3,11 +3,14 @@ package ir.keyvanadili.karmakhodro.ui.screens
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import ir.keyvanadili.karmakhodro.data.ServiceRecord
+import ir.keyvanadili.karmakhodro.ui.components.FormSection
 import ir.keyvanadili.karmakhodro.ui.components.PersianDatePickerDialog
+import ir.keyvanadili.karmakhodro.ui.theme.KarmaSpacing
 import ir.keyvanadili.karmakhodro.ui.theme.ServiceIconType
 import ir.keyvanadili.karmakhodro.ui.theme.serviceIconFor
 import ir.keyvanadili.karmakhodro.ui.theme.serviceIconLabel
@@ -62,13 +67,13 @@ fun ServiceFormScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSecondary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surfaceVariant
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -76,94 +81,145 @@ fun ServiceFormScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(KarmaSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(KarmaSpacing.xl)
         ) {
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("عنوان (مثلا: تعویض روغن، باتری، لاستیک)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Text("آیکون این سرویس", style = MaterialTheme.typography.titleMedium)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ServiceIconType.values().forEach { type ->
-                    FilterChip(
-                        selected = iconKey == type.name,
-                        onClick = { iconKey = type.name },
-                        label = { Text(serviceIconLabel(type.name)) },
-                        leadingIcon = {
-                            Icon(serviceIconFor(type.name), contentDescription = null)
+            FormSection(title = "نوع سرویس") {
+                Column(verticalArrangement = Arrangement.spacedBy(KarmaSpacing.sm)) {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("عنوان (مثلا: تعویض روغن، باتری، لاستیک)") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(KarmaSpacing.sm)
+                    ) {
+                        ServiceIconType.values().forEach { type ->
+                            ServiceIconOption(
+                                selected = iconKey == type.name,
+                                typeName = type.name,
+                                label = serviceIconLabel(type.name),
+                                onClick = { iconKey = type.name }
+                            )
                         }
+                    }
+                }
+            }
+
+            FormSection(title = "تاریخ و کارکرد") {
+                Column(verticalArrangement = Arrangement.spacedBy(KarmaSpacing.md)) {
+                    OutlinedCard(
+                        onClick = { showDatePicker = true },
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(KarmaSpacing.md),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    "تاریخ سرویس (شمسی)",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    PersianDateUtils.formatMillis(dateMillis),
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                            }
+                            Icon(
+                                Icons.Filled.CalendarMonth,
+                                contentDescription = "انتخاب تاریخ",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = mileage,
+                        onValueChange = { mileage = it.filter { c -> c.isDigit() } },
+                        label = { Text("کیلومتر در زمان سرویس") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = cost,
+                        onValueChange = { cost = it.filter { c -> c.isDigit() } },
+                        label = { Text("هزینه (تومان)") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = garageName,
+                        onValueChange = { garageName = it },
+                        label = { Text("نام تعمیرگاه / مکانیک") },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("توضیحات") },
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3
                     )
                 }
             }
 
-            OutlinedCard(
-                onClick = { showDatePicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+            FormSection(title = "یادآوری سرویس بعدی") {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column {
-                        Text("تاریخ سرویس (شمسی)", style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            PersianDateUtils.formatMillis(dateMillis),
-                            style = MaterialTheme.typography.titleMedium
+                    Column(modifier = Modifier.padding(KarmaSpacing.md)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.NotificationsActive,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "وقتی کیلومتر فعلی خودرو به این عدد برسد، نوتیف یادآوری ارسال می‌شود",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(KarmaSpacing.sm))
+                        OutlinedTextField(
+                            value = nextMileage,
+                            onValueChange = { nextMileage = it.filter { c -> c.isDigit() } },
+                            label = { Text("کیلومتر سرویس بعدی (اختیاری)") },
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.medium,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                    Icon(Icons.Filled.CalendarMonth, contentDescription = "انتخاب تاریخ")
                 }
             }
-
-            OutlinedTextField(
-                value = mileage,
-                onValueChange = { mileage = it.filter { c -> c.isDigit() } },
-                label = { Text("کیلومتر در زمان سرویس") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = cost,
-                onValueChange = { cost = it.filter { c -> c.isDigit() } },
-                label = { Text("هزینه (تومان)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = garageName,
-                onValueChange = { garageName = it },
-                label = { Text("نام تعمیرگاه / مکانیک") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("توضیحات") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
-            OutlinedTextField(
-                value = nextMileage,
-                onValueChange = { nextMileage = it.filter { c -> c.isDigit() } },
-                label = { Text("یادآوری سرویس بعدی در چه کیلومتری (اختیاری)") },
-                supportingText = { Text("وقتی کیلومتر فعلی خودرو به این عدد برسد، نوتیف یادآوری ارسال می‌شود") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = {
@@ -185,22 +241,62 @@ fun ServiceFormScreen(
                     )
                     onSave(record)
                 },
+                shape = MaterialTheme.shapes.large,
+                contentPadding = PaddingValues(vertical = 14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("ذخیره")
+                Text("ذخیره", style = MaterialTheme.typography.titleSmall, maxLines = 1)
             }
 
             if (existingRecord != null && onDelete != null) {
                 OutlinedButton(
                     onClick = { onDelete(existingRecord) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    shape = MaterialTheme.shapes.large,
+                    contentPadding = PaddingValues(vertical = 14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("حذف این رویداد")
+                    Icon(Icons.Filled.DeleteOutline, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("حذف این رویداد", maxLines = 1)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(KarmaSpacing.lg))
         }
+    }
+}
+
+@Composable
+private fun ServiceIconOption(
+    selected: Boolean,
+    typeName: String,
+    label: String,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(64.dp)
+    ) {
+        FilledIconToggleButton(
+            checked = selected,
+            onCheckedChange = { onClick() },
+            shape = CircleShape,
+            colors = IconButtonDefaults.filledIconToggleButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                checkedContainerColor = MaterialTheme.colorScheme.secondary,
+                checkedContentColor = MaterialTheme.colorScheme.onSecondary
+            )
+        ) {
+            Icon(serviceIconFor(typeName), contentDescription = label)
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            color = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

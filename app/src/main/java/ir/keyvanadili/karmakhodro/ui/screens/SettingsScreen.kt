@@ -4,22 +4,28 @@ import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ir.keyvanadili.karmakhodro.backup.BackupManager
 import ir.keyvanadili.karmakhodro.data.Repository
+import ir.keyvanadili.karmakhodro.ui.components.FormSection
+import ir.keyvanadili.karmakhodro.ui.theme.KarmaSpacing
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -102,75 +108,141 @@ fun SettingsScreen(
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surfaceVariant
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(KarmaSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(KarmaSpacing.xl)
         ) {
-
-            Text("پشتیبان‌گیری و بازیابی اطلاعات", style = MaterialTheme.typography.titleMedium)
-
-            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("از اطلاعات همه خودروها و سرویس‌ها یک فایل پشتیبان تهیه کنید یا فایل قبلی را بازیابی کنید.")
-
-                    Button(
-                        onClick = { exportLauncher.launch(backupFileName) },
-                        enabled = !isWorking,
-                        modifier = Modifier.fillMaxWidth()
+            FormSection(title = "پشتیبان‌گیری و بازیابی اطلاعات") {
+                ElevatedCard(
+                    shape = MaterialTheme.shapes.large,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(KarmaSpacing.lg),
+                        verticalArrangement = Arrangement.spacedBy(KarmaSpacing.sm)
                     ) {
-                        Icon(Icons.Filled.CloudUpload, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("تهیه فایل پشتیبان")
-                    }
+                        Text(
+                            "از اطلاعات همه خودروها و سرویس‌ها یک فایل پشتیبان تهیه کنید یا فایل قبلی را بازیابی کنید.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
 
-                    OutlinedButton(
-                        onClick = { importLauncher.launch(arrayOf("application/json")) },
-                        enabled = !isWorking,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Filled.CloudDownload, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("بازیابی از فایل پشتیبان")
-                    }
+                        Spacer(modifier = Modifier.height(KarmaSpacing.xs))
 
-                    Text(
-                        "توجه: بازیابی، تمام اطلاعات فعلی برنامه را با اطلاعات فایل پشتیبان جایگزین می‌کند.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                        Button(
+                            onClick = { exportLauncher.launch(backupFileName) },
+                            enabled = !isWorking,
+                            shape = MaterialTheme.shapes.large,
+                            contentPadding = PaddingValues(vertical = 12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Filled.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("تهیه فایل پشتیبان", maxLines = 1)
+                        }
 
-                    if (isWorking) {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        OutlinedButton(
+                            onClick = { importLauncher.launch(arrayOf("application/json")) },
+                            enabled = !isWorking,
+                            shape = MaterialTheme.shapes.large,
+                            contentPadding = PaddingValues(vertical = 12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Filled.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("بازیابی از فایل پشتیبان", maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        }
+
+                        if (isWorking) {
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(MaterialTheme.shapes.extraSmall)
+                            )
+                        }
+
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(KarmaSpacing.sm),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Filled.WarningAmber,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    "بازیابی، تمام اطلاعات فعلی برنامه را با اطلاعات فایل پشتیبان جایگزین می‌کند.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            Divider()
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.DirectionsCar, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(Icons.Filled.Build, contentDescription = null)
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("کارما خودرو", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("طراح و برنامه‌نویس: کیوان عدیلی")
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text("نسخه برنامه: $versionName", style = MaterialTheme.typography.bodyMedium)
-                }
-            }
+            AboutFooter(versionName = versionName)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(KarmaSpacing.sm))
         }
+    }
+}
+
+@Composable
+private fun AboutFooter(versionName: String) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.DirectionsCar,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                Icon(
+                    Icons.Filled.Build,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(KarmaSpacing.sm))
+        Text("کارما خودرو", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            "طراح و برنامه‌نویس: کیوان عدیلی",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            "نسخه برنامه: $versionName",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
