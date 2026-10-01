@@ -244,5 +244,12 @@ private fun AboutFooter(versionName: String) {
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            "به سفارش نمایشگاه خودرو کارما",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        
     }
 }
